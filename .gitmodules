@@ -1,0 +1,9 @@
+[submodule "emails_sender"]
+	path = emails_sender
+	url = https://github.com/healfy/emails_sender.git
+[submodule "api_gateway"]
+	path = api_gateway
+	url = https://github.com/healfy/api_gateway.git
+[submodule "user_service"]
+	path = user_service
+	url = https://github.com/Werded/user_service.git

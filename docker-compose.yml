@@ -1,0 +1,71 @@
+version: '3.0'
+services:
+  postgres_users:
+    image: library/postgres:13
+    environment:
+      POSTGRES_USER: werded
+      POSTGRES_DB: user_service
+      POSTGRES_PASSWORD: werded1992
+      POSTGRES_HOST: postgres_users
+      POSTGRES_PORT: 5432
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - database:/var/lib/postgresql/data/
+    networks:
+      - sword_network
+  users:
+    build:
+      context: user_service
+      dockerfile: Dockerfile
+    environment:
+      SENTRY: ""
+      LOGGER_LVL: INFO
+      POSTGRES_USER: werded
+      POSTGRES_DB: user_service
+      POSTGRES_PASSWORD: werded1992
+      POSTGRES_HOST: postgres_users
+      POSTGRES_PORT: 5432
+    depends_on:
+      - postgres_users
+    networks:
+      - sword_network
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: 'rabbitmq'
+    volumes:
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+    networks:
+      - sword_network
+
+  email_sender:
+    build:
+      context: emails_sender
+      dockerfile: Dockerfile
+    environment:
+      RMQ_URL: "rabbitmq:5672"
+    networks:
+      - sword_network
+    depends_on:
+      - rabbitmq
+
+  api_gateway:
+    build:
+      context: api_gateway
+      dockerfile: Dockerfile
+    environment:
+      USERS_URL: "http://users:8000"
+    depends_on:
+      - users
+      - email_sender
+    networks:
+      - sword_network
+    ports:
+    - 8000:8000
+
+volumes:
+  database:
+
+networks:
+  sword_network:
+    driver: bridge
